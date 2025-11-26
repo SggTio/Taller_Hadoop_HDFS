@@ -1,0 +1,14 @@
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+*~
+
+# Directorios potencialmente grandes o sensibles (ajusta si aplica)
+data/
+tmp/
+out/
+
+# Cosas de sistema
+.DS_Store
+Thumbs.db
