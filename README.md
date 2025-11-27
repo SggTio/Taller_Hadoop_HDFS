@@ -38,219 +38,106 @@ Taller_Hadoop_HDFS/
     └── Taller_Hadoop_HDFS-1.pdf
 ```
 
-```text
-config/
-```
+### `config/`
 
 Contiene la configuración de Hadoop empleada en el taller:
 
-core-site.xml: define, entre otros, fs.defaultFS (por ejemplo hdfs://10.43.100.121:9000).
+- `core-site.xml`: Define `fs.defaultFS` (ej. `hdfs://IPMASTER:9000`) y directorios temporales.
+- `hdfs-site.xml`: Parámetros de HDFS (`dfs.replication`, `dfs.name.dir`, `dfs.data.dir`).
+- `hadoop-env.sh`: Variables de entorno (`JAVA_HOME`, `HADOOP_OPTS`).
+- `workers`: Lista de nodos worker del clúster (`cadhead02`, `cad02-w000`, etc.).
 
-hdfs-site.xml: parámetros de HDFS, como dfs.replication.
+Estos archivos sirven como **referencia** de la configuración del clúster. En un entorno donde tengas permisos de administrador, estos archivos deberían copiarse a `$HADOOP_HOME/etc/hadoop` o definirse mediante `HADOOP_CONF_DIR`.
 
-hadoop-env.sh: variables de entorno (incluye JAVA_HOME, etc.).
+### `scripts/`
 
-workers: lista de nodos worker del clúster.
-
-Estos archivos reflejan la configuración proporcionada/validada en el entorno del taller.
-No se modifican para cambiar permisos de ejecución; eso es responsabilidad del administrador del clúster.
-
-```text
-scripts/
-```
 Scripts Bash que encapsulan la lógica del taller:
 
-config.sh
-Configuración común:
+- `config.sh`: Configuración común. Detecta `JAVA_HOME` y `HADOOP_HOME`.
+- `check_env.sh`: Verifica variables de entorno y la presencia de archivos de configuración.
+- `init_namenode.sh`: Módulo conceptual. Documenta el comando `hdfs namenode -format` (requiere admin).
+- `start_hdfs.sh`: Verifica si el clúster está activo mediante `jps` y `hdfs dfsadmin -report`.
+- `stop_hdfs.sh`: Documenta la detención de servicios.
+- `hdfs_demo.sh`: Script principal de demostración. Ejecuta comandos HDFS como cliente:
+    - Creación de directorios (`mkdir`)
+    - Carga y descarga de archivos (`put`, `get`)
+    - Operaciones de gestión (`cp`, `mv`, `rm`)
+    - Estadísticas (`du`, `stat`)
+- `clean_hdfs.sh`: Elimina el directorio de pruebas `/pruebas_hdfs`.
 
-Respeta JAVA_HOME, HADOOP_HOME, HADOOP_CONF_DIR si ya vienen del entorno.
+---
 
-Si es necesario, intenta inferir HADOOP_HOME a partir de la ubicación de hdfs.
+## 2. Uso del Makefile
 
-Añade bin/ y sbin/ de Hadoop al PATH.
+El Makefile expone las tareas principales como comandos `make`:
 
-check_env.sh
-Verifica:
-
-Variables de entorno clave (JAVA_HOME, HADOOP_HOME, HADOOP_CONF_DIR).
-
-Presencia de los archivos de configuración (core-site.xml, hdfs-site.xml, hadoop-env.sh, workers).
-
-Parámetros críticos (fs.defaultFS, dfs.replication, etc.).
-
-Lista de nodos worker.
-
-init_namenode.sh
-Módulo conceptual de inicialización del NameNode.
-En un despliegue real local, este script podría ejecutar:
-
-```bash
-hdfs namenode -format
-```
-
-Sin embargo, en el clúster de laboratorio solo el usuario usuario puede formatear el NameNode.
-Por ello, en este entorno el script no ejecuta el formateo real; se limita a documentar el procedimiento y salir sin error.
-
-start_hdfs.sh
-Representa el arranque del clúster HDFS:
-
-Explica que el comando real es start-dfs.sh.
-
-Indica que solo usuario puede ejecutar dicho comando.
-
-No intenta arrancar los demonios; en su lugar:
-
-Muestra los procesos Java con jps -l.
-
-Ejecuta hdfs dfsadmin -report para comprobar si el NameNode está accesible.
-
-Si el NameNode responde, muestra el resumen del clúster.
-
-Si no responde, indica que probablemente el clúster no está levantado y que debe hacerlo el administrador.
-
-stop_hdfs.sh
-Representa la detención del clúster HDFS:
-
-Explica que el comando real es stop-dfs.sh.
-
-Indica que solo usuario puede detener los demonios.
-
-No intenta detener servicios; simplemente muestra los procesos Java (jps -l) como referencia.
-
-hdfs_demo.sh
-Script de demostración de comandos HDFS como cliente (cuenta estudiante).
-Asume que el clúster ya está levantado por usuario y ejecuta:
-
-Creación de directorios de prueba en HDFS (ej. /pruebas_hdfs/datos, etc.).
-
-Carga de ficheros desde el sistema local (hdfs dfs -put).
-
-Lectura de archivos en HDFS (hdfs dfs -cat).
-
-Descarga a local (hdfs dfs -get).
-
-Operaciones de gestión:
-
-Copia interna (hdfs dfs -cp).
-
-Renombrado/movido (hdfs dfs -mv).
-
-Estadísticas (hdfs dfs -du, hdfs dfs -dus).
-
-Metadatos (hdfs dfs -stat).
-
-Mensajes de log explicando cada paso.
-
-clean_hdfs.sh
-Elimina el directorio de pruebas en HDFS (por ejemplo /pruebas_hdfs) para dejar el clúster limpio al finalizar el taller.
-
-```text
-doc/
-```
-
-Taller_Hadoop_HDFS.pdf: informe/resolución del taller.
-
-Taller_Hadoop_HDFS-1.pdf: enunciado original proporcionado en el curso.
-
-2. Uso del Makefile
-
-El Makefile expone las tareas principales como comandos make:
 ```bash
 help:
 	@echo "Comandos disponibles:"
-	@echo "  make env    - Verificar entorno y configuración"
-	@echo "  make init   - Documentar/gestionar inicialización de NameNode (no formatea en este entorno)"
-	@echo "  make start  - Verificar estado del clúster HDFS"
-	@echo "  make stop   - Mostrar procesos Java relativos a HDFS"
-	@echo "  make status - Mostrar resumen del NameNode (dfsadmin -report)"
-	@echo "  make demo   - Ejecutar comandos de demostración HDFS (requiere clúster levantado)"
+	@echo "  make env    - Verificar entorno y configuracion"
+	@echo "  make init   - Formatear NameNode (SOLO la primera vez)"
+	@echo "  make start  - Iniciar cluster HDFS"
+	@echo "  make stop   - Detener cluster HDFS"
+	@echo "  make status - Mostrar estado del cluster"
+	@echo "  make demo   - Ejecutar comandos de demostracion HDFS"
 	@echo "  make clean  - Limpiar datos de pruebas en HDFS"
 ```
 
-Flujo típico en el entorno del taller:
+### Flujo de Trabajo Sugerido
 
-1. Verificar entorno:
-```text
-make env
-```
+1. **Verificar entorno**:
+   ```bash
+   make env
+   ```
+   Confirma que `JAVA_HOME` y `HADOOP_HOME` son detectados y que los archivos de configuración en `config/` existen (o en el directorio de sistema).
 
-2. Ejecutar el módulo conceptual de inicialización:
-```text
-make init
-```
+2. **Verificar estado del clúster**:
+   ```bash
+   make start
+   ```
+   Si el clúster está activo (gestionado por el administrador), mostrará el reporte de nodos. Si no, indicará error de conexión.
 
-3. Verificar estado del clúster:
+3. **Ejecutar la demostración**:
+   ```bash
+   make demo
+   ```
+   **Nota:** Requiere que el clúster esté en ejecución.
+   Este script realizará automáticamante:
+   - Creación de archivos locales de prueba.
+   - Subida de archivos a HDFS (`/pruebas_hdfs`).
+   - Pruebas de manipulación de archivos (copiar, mover, ver contenido).
+   - Descarga y verificación.
+   - Limpieza parcial.
 
-```text
-make start
-```
+4. **Limpieza final**:
+   ```bash
+   make clean
+   ```
+   Elimina los directorios creados en HDFS para dejar el sistema limpio.
 
-Si el NameNode ya está levantado por usuario, dfsadmin -report mostrará el resumen del clúster.
+---
 
-Si no lo está, el script indicará que no se pudo contactar al NameNode.
+## 3. Configuración Manual (Opcional)
 
-4. Ejecutar la demo HDFS (solo si el clúster está levantado):
+Si deseas ejecutar estos scripts en un entorno propio (no el del laboratorio), puedes usar la configuración incluida en `config/`.
 
-```text
-make demo
-```
+1. Asegúrate de tener Java 8 y Hadoop instalados.
+2. Exporta la variable `HADOOP_CONF_DIR` apuntando a la carpeta `config/` de este repositorio (o copia los archivos a tu instalación):
+   ```bash
+   export HADOOP_CONF_DIR=$(pwd)/config
+   ```
+3. Ajusta `core-site.xml` con la IP de tu Master (o `localhost` si es pseudo-distribuido).
+4. Ajusta `workers` con los hostnames de tus nodos.
 
-Crea directorios de prueba en HDFS.
+---
 
-Sube y baja archivos.
+## 4. Relación con el Taller
 
-Ejecuta operaciones básicas de lectura y gestión.
+### G. Modularidad y Makefile
+El código se organiza en módulos Bash (`scripts/*.sh`) especializados por responsabilidad. El `Makefile` orquesta estos módulos para facilitar la ejecución y corrección.
 
-5. Limpiar datos de prueba:
-
-```text
-make clean
-```
-
-6. Verificar/consultar procesos HDFS (en modo lectura):
-
-```text
-make stop
-```
-
-Este comando no detiene demonios; solo muestra procesos Java y recuerda que stop-dfs.sh debe ser ejecutado por usuario. 
-
-3. Entorno y requisitos
-
-Acceso al clúster Hadoop del curso.
-
-Java 8 disponible (definido en JAVA_HOME).
-
-Variables de entorno de Hadoop (HADOOP_HOME, HADOOP_CONF_DIR) configuradas por el sistema o inferidas por scripts/config.sh.
-
-Permisos de la cuenta estudiante para ejecutar comandos cliente hdfs dfs.
-
-Nota: La ejecución de comandos administrativos (hdfs namenode -format, start-dfs.sh, stop-dfs.sh) está restringida al usuario de servicio usuario según la configuración del clúster de laboratorio.
-
-4. Relación con el detalle del taller
-
-G. Modularidad y Makefile
-
-El código se organiza en módulos Bash (scripts/*.sh) especializados por responsabilidad (verificación, inicialización, arranque, parada, demo, limpieza).
-
-El Makefile centraliza el flujo de trabajo en targets simples (env, init, start, demo, stop, clean) que orquestan estos módulos.
-
-H. Bonus repo (Repositorio del proyecto)
-
-Este repositorio contiene:
-
-La configuración de Hadoop utilizada.
-
-Los scripts modulares.
-
-El Makefile.
-
-El enunciado y el informe.
-
-Permite que cualquier persona con acceso al mismo clúster:
-
-Clone el repositorio.
-
-Ajuste, si es necesario, scripts/config.sh.
-
-Ejecute make env y make demo (con el clúster levantado por usuario) para reproducir la parte práctica del taller.
+### H. Bonus Repo
+Este repositorio cumple con el requerimiento de entregar un proyecto estructurado, documentado y reproducible. Permite:
+- Clonar el repo.
+- Verificar el entorno (`make env`).
+- Ejecutar la batería de pruebas (`make demo`) de forma automatizada.

@@ -1,0 +1,18 @@
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://IPMASTER:9000</value>
+    </property>
+    <property>
+        <name>dfs.permissions</name>
+        <value>false</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/mnt/sda1/hadoop/tmp</value>
+    </property>
+    <property>
+        <name>hadoop.native.lib</name>
+        <value>true</value>
+    </property>
+</configuration>
