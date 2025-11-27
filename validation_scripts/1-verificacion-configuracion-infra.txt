@@ -1,0 +1,24 @@
+# 1. Verificar que el usuario y grupo existen
+echo "=== Verificación de Usuario y Grupo ==="
+id usuario
+groups usuario
+# 2. Verificar variables de entorno de Hadoop
+echo -e "\n=== Variables de Entorno Hadoop ==="
+echo "HADOOP_HOME: $HADOOP_HOME"
+echo "JAVA_HOME: $JAVA_HOME"
+echo "HADOOP_CONF_DIR: $HADOOP_CONF_DIR"
+# 3. Verificar que el directorio de instalación existe
+echo -e "\n=== Directorio de Instalación Hadoop ==="
+ls -la $HADOOP_HOME/etc/hadoop/ | grep -E "core-site.xml|hdfs-site.xml|hadoop-env.sh|workers"
+# 4. Validar contenido de core-site.xml
+echo -e "\n=== Contenido core-site.xml (fs.defaultFS) ==="
+grep -A 2 "fs.defaultFS" $HADOOP_CONF_DIR/core-site.xml
+# 5. Validar contenido de hdfs-site.xml (replicación)
+echo -e "\n=== Configuración de Replicación (hdfs-site.xml) ==="
+grep -A 2 "dfs.replication" $HADOOP_CONF_DIR/hdfs-site.xml
+# 6. Validar archivo workers
+echo -e "\n=== Nodos Workers Configurados ==="
+cat $HADOOP_CONF_DIR/workers
+# 7. Verificar JAVA_HOME en hadoop-env.sh
+echo -e "\n=== JAVA_HOME en hadoop-env.sh ==="
+grep "export JAVA_HOME" $HADOOP_CONF_DIR/hadoop-env.sh
