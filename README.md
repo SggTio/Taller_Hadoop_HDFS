@@ -109,6 +109,8 @@ help:
    - Descarga y verificación.
    - Limpieza parcial.
 
+   > **Nota sobre Warnings:** Es posible que observes advertencias del tipo `WARN hdfs.DataStreamer: Exception in createBlockOutputStream` o `No route to host`. Esto es común en entornos de laboratorio compartidos si algún DataNode está saturado o inactivo temporalmente. HDFS intentará recuperarse automáticamente replicando en otro nodo disponible (verás mensajes de `Error Recovery` y luego éxito en la operación).
+
 4. **Limpieza final**:
    ```bash
    make clean
